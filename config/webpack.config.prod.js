@@ -1,3 +1,11 @@
+// @remove-on-eject-begin
+/**
+ * Copyright (c) 2015-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+// @remove-on-eject-end
 'use strict';
 
 const autoprefixer = require('autoprefixer');
@@ -88,12 +96,21 @@ module.exports = {
     // https://github.com/facebookincubator/create-react-app/issues/290
     // `web` extension prefixes have been added for better support
     // for React Native Web.
-    extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx'],
+    extensions: ['.web.js', '.js', '.json', '.web.jsx', '.jsx'],
     alias: {
-      
+      // @remove-on-eject-begin
+      // Resolve Babel runtime relative to react-scripts.
+      // It usually still works on npm 3 without this but it would be
+      // unfortunate to rely on, as react-scripts could be symlinked,
+      // and thus babel-runtime might not be resolvable from the source.
+      'babel-runtime': path.dirname(
+        require.resolve('babel-runtime/package.json')
+      ),
+      // @remove-on-eject-end
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
       'react-native': 'react-native-web',
+      '@': path.join(__dirname, '../src'),
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -114,14 +131,23 @@ module.exports = {
       // First, run the linter.
       // It's important to do this before Babel processes the JS.
       {
-        test: /\.(js|jsx|mjs)$/,
+        test: /\.(js|jsx)$/,
         enforce: 'pre',
         use: [
           {
             options: {
               formatter: eslintFormatter,
               eslintPath: require.resolve('eslint'),
-              
+              // @remove-on-eject-begin
+              // TODO: consider separate config for production,
+              // e.g. to enable no-console and no-debugger only in production.
+              baseConfig: {
+                extends: [require.resolve('eslint-config-react-app')],
+              },
+              plugins: [["import", { libraryName: "antd", style: true }]],
+              ignore: false,
+              useEslintrc: false,
+              // @remove-on-eject-end
             },
             loader: require.resolve('eslint-loader'),
           },
@@ -145,11 +171,14 @@ module.exports = {
           },
           // Process JS with Babel.
           {
-            test: /\.(js|jsx|mjs)$/,
+            test: /\.(js|jsx)$/,
             include: paths.appSrc,
             loader: require.resolve('babel-loader'),
             options: {
-              
+              // @remove-on-eject-begin
+              babelrc: false,
+              presets: [require.resolve('babel-preset-react-app')],
+              // @remove-on-eject-end
               compact: true,
             },
           },
@@ -212,6 +241,48 @@ module.exports = {
             ),
             // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
           },
+          // ** STOP ** Are you adding a new loader?
+          // Remember to add the new extension(s) to the "file" loader exclusion list.
+          {
+            test: /\.less$/,
+            use: [
+              require.resolve("style-loader"),
+              {
+                loader: require.resolve("css-loader")
+                // options: {
+                // 	importLoaders: 1
+                // }
+              },
+              {
+                loader: require.resolve("postcss-loader"),
+                options: {
+                  // Necessary for external CSS imports to work
+                  // https://github.com/facebookincubator/create-react-app/issues/2677
+                  ident: "postcss",
+                  plugins: () => [
+                    require("postcss-flexbugs-fixes"),
+                    autoprefixer({
+                      browsers: [
+                        ">1%",
+                        "last 4 versions",
+                        "Firefox ESR",
+                        "not ie < 9" // React doesn't support IE8 anyway
+                      ],
+                      flexbox: "no-2009"
+                    })
+                  ]
+                }
+              },
+              {
+                loader: require.resolve("less-loader"),
+                options: {
+                  // TODO 通过theme.js定义antd组件样式，并且支持按照依赖导入  https://ant.design/docs/react/customize-theme-cn
+                  // TODO custom style by theme.js,  https://ant.design/docs/react/customize-theme-cn
+                  // modifyVars: getThemeConfig()
+                }
+              }
+            ]
+          },
           // "file" loader makes sure assets end up in the `build` folder.
           // When you `import` an asset, you get its filename.
           // This loader doesn't use a "test" so it will catch all modules
@@ -222,7 +293,17 @@ module.exports = {
             // it's runtime that would otherwise processed through "file" loader.
             // Also exclude `html` and `json` extensions so they get processed
             // by webpacks internal loaders.
-            exclude: [/\.js$/, /\.html$/, /\.json$/],
+            exclude: [
+              /\.html$/,
+              /\.(js|jsx)$/,
+              /\.css$/,
+              /\.less$/,
+              /\.json$/,
+              /\.bmp$/,
+              /\.gif$/,
+              /\.jpe?g$/,
+              /\.png$/
+            ],
             options: {
               name: 'static/media/[name].[hash:8].[ext]',
             },
@@ -272,9 +353,6 @@ module.exports = {
         // https://github.com/mishoo/UglifyJS2/issues/2011
         comparisons: false,
       },
-      mangle: {
-        safari10: true,
-      },        
       output: {
         comments: false,
         // Turned on because emoji and regex is not minified properly using default
