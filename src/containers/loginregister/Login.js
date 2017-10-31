@@ -9,7 +9,12 @@ import WebIM from "@/config/WebIM"
 
 const FormItem = Form.Item
 class Login extends React.Component {
-    handleOk () {
+    constructor(props) {
+        super(props)
+
+        this.handleOk = this.handleOk.bind(this)
+    }
+    handleOk() {
         const {
             doLogin,
             doLoginByToken,

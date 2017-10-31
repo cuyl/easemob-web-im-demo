@@ -8,6 +8,7 @@ export default class ModalComponent extends React.Component {
     constructor(props) {
         super()
         this.state = { visible: props.visible, title: props.title }
+        this.handleOk = this.handleOk.bind(this)
         this.handleCancel = this.handleCancel.bind(this)
     }
 
@@ -15,9 +16,8 @@ export default class ModalComponent extends React.Component {
         this.setState({
             visible: true
         })
-        debugger
     }
-    handleOk = e => {
+    handleOk(e) {
         // console.log(e)
         this.setState({
             visible: false
