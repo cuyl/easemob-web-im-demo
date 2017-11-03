@@ -144,7 +144,6 @@ module.exports = {
               baseConfig: {
                 extends: [require.resolve('eslint-config-react-app')],
               },
-              plugins: [["import", { libraryName: "antd", style: true }]],
               ignore: false,
               useEslintrc: false,
               // @remove-on-eject-end
@@ -178,8 +177,9 @@ module.exports = {
               // @remove-on-eject-begin
               babelrc: false,
               presets: [require.resolve('babel-preset-react-app')],
-              // @remove-on-eject-end
+              // @remove-on-eject-end 
               compact: true,
+              plugins: [["import", { libraryName: "antd", style: true }]],
             },
           },
           // The notation here is somewhat confusing.
